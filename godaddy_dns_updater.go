@@ -66,17 +66,20 @@ func getCurrentIPFromAPIAndStoreInFile(ipfile *IPFile, ch chan string) {
 	//update ip
 	err = ioutil.WriteFile(ipfile.fileName, copyIP, 664)
 	defer ipfile.mux.Unlock()
+
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 }
 
 func main() {
-	var ipfile = &IPFile{fileName: "/tmp/ip.json"}
+	var ipfile = &IPFile{fileName: os.Getenv("ip_file_path")}
 	ch1 := make(chan string)
 	ch2 := make(chan string)
+
 	go getPreviousIPFromFile(ipfile, ch1)
 	go getCurrentIPFromAPIAndStoreInFile(ipfile, ch2)
+
 	previousIP, currentIP := <-ch1, <-ch2
 
 	fmt.Printf("Previous IP %v\n Current IP %v\n", previousIP, currentIP)
@@ -87,4 +90,14 @@ func main() {
 	}
 
 	fmt.Println("We need to update the dns!!!")
+	/**
+	TODO: build a request for godaddy PUT url/v1/domains/selfcoding.com/records/A/@
+	headers: {
+		"Authorization": "sso-key os.Getenv("godaddy_api_key"): os.Getenv("godaddy_api_secret")"
+	}
+	{
+		ttl: 600,
+		data: "currentIP"
+	}
+	*/
 }

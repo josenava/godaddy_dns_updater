@@ -48,7 +48,7 @@ func getPreviousIPFromFile(ipfile *IPFile, ch chan string) {
 func getCurrentIPFromAPIAndStoreInFile(ipfile *IPFile, ch chan string) {
 	var currentIP map[string]interface{}
 
-	res, _ := http.Get("https://api.ipify.org?format=json")
+	res, _ := http.Get(os.Getenv("ip_finder_url"))
 
 	ip, _ := ioutil.ReadAll(res.Body)
 	copyIP := make([]byte, len(ip))

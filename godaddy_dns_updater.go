@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -72,7 +73,40 @@ func getCurrentIPFromAPIAndStoreInFile(ipfile *IPFile, ch chan string) {
 	}
 }
 
+func updateGodaddyDNS(url, domain, apiKey, apiSecret, currentIP string) {
+	client := &http.Client{}
+
+	fmt.Println(url)
+	fmt.Println(domain)
+	fmt.Println(apiKey)
+	fmt.Println(apiSecret)
+
+	reqData := []byte(fmt.Sprintf(`[{"ttl": 600, "data": "%s" }]`, currentIP))
+
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/v1/domains/%s/records/A/@", url, domain), bytes.NewBuffer(reqData))
+	req.Header.Add("Authorization", fmt.Sprintf("sso-key %s:%s", apiKey, apiSecret))
+	req.Header.Add("Content-type", "application/json")
+
+	
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer res.Body.Close()
+
+    fmt.Println("response Status:", res.Status)
+    fmt.Println("response Headers:", res.Header)
+    body, _ := ioutil.ReadAll(res.Body)
+    fmt.Println("response Body:", string(body))
+}
+
 func main() {
+	apiUrl := os.Getenv("godaddy_api_url")
+	domain := os.Getenv("domain_url")
+	apiKey := os.Getenv("godaddy_api_key")
+	apiSecret := os.Getenv("godaddy_api_secret")
+
 	var ipfile = &IPFile{fileName: os.Getenv("ip_file_path")}
 	ch1 := make(chan string)
 	ch2 := make(chan string)
@@ -90,14 +124,5 @@ func main() {
 	}
 
 	fmt.Println("We need to update the dns!!!")
-	/**
-	TODO: build a request for godaddy PUT url/v1/domains/selfcoding.com/records/A/@
-	headers: {
-		"Authorization": "sso-key os.Getenv("godaddy_api_key"): os.Getenv("godaddy_api_secret")"
-	}
-	{
-		ttl: 600,
-		data: "currentIP"
-	}
-	*/
+	updateGodaddyDNS(apiUrl, domain, apiKey, apiSecret, currentIP)
 }

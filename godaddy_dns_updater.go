@@ -61,16 +61,16 @@ func getCurrentIPFromAPIAndStoreInFile(ipfile *IPFile, ch chan string) {
 		panic(err)
 	}
 
-	ch <- currentIP["ip"].(string)
-
 	ipfile.mux.Lock()
-
+	
 	err = ioutil.WriteFile(ipfile.fileName, copyIP, 664)
 	defer ipfile.mux.Unlock()
-
+	
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	
+	ch <- currentIP["ip"].(string)
 }
 
 func updateGodaddyDNS(url, domain, apiKey, apiSecret, currentIP string) {

@@ -64,7 +64,7 @@ func getCurrentIPFromAPIAndStoreInFile(ipfile *IPFile, ch chan string) {
 	ch <- currentIP["ip"].(string)
 
 	ipfile.mux.Lock()
-	//update ip
+
 	err = ioutil.WriteFile(ipfile.fileName, copyIP, 664)
 	defer ipfile.mux.Unlock()
 
@@ -75,19 +75,12 @@ func getCurrentIPFromAPIAndStoreInFile(ipfile *IPFile, ch chan string) {
 
 func updateGodaddyDNS(url, domain, apiKey, apiSecret, currentIP string) {
 	client := &http.Client{}
-
-	fmt.Println(url)
-	fmt.Println(domain)
-	fmt.Println(apiKey)
-	fmt.Println(apiSecret)
-
 	reqData := []byte(fmt.Sprintf(`[{"ttl": 600, "data": "%s" }]`, currentIP))
 
 	req, _ := http.NewRequest("PUT", fmt.Sprintf("%s/v1/domains/%s/records/A/@", url, domain), bytes.NewBuffer(reqData))
 	req.Header.Add("Authorization", fmt.Sprintf("sso-key %s:%s", apiKey, apiSecret))
 	req.Header.Add("Content-type", "application/json")
 
-	
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -95,10 +88,8 @@ func updateGodaddyDNS(url, domain, apiKey, apiSecret, currentIP string) {
 
 	defer res.Body.Close()
 
-    fmt.Println("response Status:", res.Status)
-    fmt.Println("response Headers:", res.Header)
-    body, _ := ioutil.ReadAll(res.Body)
-    fmt.Println("response Body:", string(body))
+	body, _ := ioutil.ReadAll(res.Body)
+	fmt.Println("debug response Body:", string(body))
 }
 
 func main() {
